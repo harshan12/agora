@@ -1,3 +1,11 @@
 <div [id]="localCallId" class="local"></div>
 
 <div *ngFor="let callId of remoteCalls" [id]="callId" class="remote"></div>
+
+<button (click)="startCall()">Start Call</button>
+
+<button type="button" (click)="joinstream()">Join stream</button>
+
+<button class="leavestream" type="button" (click)="leavestream()">Leave stream</button>
+
+<!-- <button class="leavestream" type="button" (click)="stopStream()">Stop stream</button> -->

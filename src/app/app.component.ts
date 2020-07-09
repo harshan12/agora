@@ -20,21 +20,49 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.client = this.ngxAgoraService.createClient({ mode: 'rtc', codec: 'h264' });
+    this.client = this.ngxAgoraService.createClient({ mode: 'live', codec: 'h264' });
     this.assignClientHandlers();
+    this.client.init('8e075d56e11b4bb0aa277cd10061a9be', function () {
+      console.log("init success");
+      }, (err) => {
+      console.error(err);
+    });
 
+    this.client.disableDualStream(function() {
+      console.log("Disable dual stream success!")
+    });
+
+    
+  }
+
+  startCall() {
     this.localStream = this.ngxAgoraService.createStream({ streamID: this.uid, audio: true, video: true, screen: false });
     this.assignLocalStreamHandlers();
     // Join and publish methods added in this step
     this.initLocalStream(() => this.join(uid => this.publish(), error => console.error(error)));
+
+    //this.ngxAgoraService.client.join(null, '1000', null, (uid) => {});
+
+    
   }
 
   /**
    * Attempts to connect to an online chat room where users can host and receive A/V streams.
    */
   join(onSuccess?: (uid: number | string) => void, onFailure?: (error: Error) => void): void {
-    this.client.join(null, 'foo-bar', this.uid, onSuccess, onFailure);
+    this.client.join(null, '1000', this.uid, onSuccess, onFailure);
   }
+
+
+  
+  
+
+  leavestream() {
+    this.localCallId = '';
+    this.ngxAgoraService.client.leave(() => { console.log('Leave channel successfully'); });
+  }
+
+
 
   /**
    * Attempts to upload the created local A/V stream to a joined chat room.
@@ -68,12 +96,17 @@ export class AppComponent implements OnInit {
 
     this.client.on(ClientEvent.RemoteStreamSubscribed, evt => {
       const stream = evt.stream as Stream;
+      console.log(stream, 'as');
       const id = this.getRemoteId(stream);
       if (!this.remoteCalls.length) {
         this.remoteCalls.push(id);
         setTimeout(() => stream.play(id), 1000);
       }
     });
+
+    
+
+    
 
     this.client.on(ClientEvent.RemoteStreamRemoved, evt => {
       const stream = evt.stream as Stream;
@@ -92,6 +125,19 @@ export class AppComponent implements OnInit {
         console.log(`${evt.uid} left from this channel`);
       }
     });
+  }
+
+  joinstream() {
+    this.client.setClientRole('audience', function() {
+        console.log('Client role set to audience');
+      });
+  
+      this.client.join(null, '1000', 0, function(uid) {
+          console.log('User ' + uid + ' join channel successfully');
+      }, function(err) {
+          console.log('[ERROR] : join channel failed', err);
+      });
+   
   }
 
   private assignLocalStreamHandlers(): void {
